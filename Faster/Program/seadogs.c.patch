@@ -1,0 +1,45 @@
+#find
+				if (TimeScaleCounter > 28)
+					TimeScaleCounter = 28; // море x8
+#replacewith
+				if (TimeScaleCounter > 60)
+					TimeScaleCounter = 60; // море x16
+#endreplace
+
+#find
+				if (TimeScaleCounter > 20)
+					TimeScaleCounter = 20; // бой в море x6
+#replacewith
+				if (TimeScaleCounter > 44)
+					TimeScaleCounter = 44; // бой в море x12
+#endreplace
+
+#find
+				if (TimeScaleCounter > 16)
+					TimeScaleCounter = 16; // карта x5
+#replacewith
+				if (TimeScaleCounter > 20)
+					TimeScaleCounter = 20; // карта x6
+#endreplace
+
+#find
+							case 2:
+								if (bDisableMapEnter)
+									TimeScaleCounter = 20;	// бой в море x6
+								else
+									TimeScaleCounter = 28;	// море x8
+							break;
+							case 3:
+								TimeScaleCounter = 16;		// карта x5
+							break;
+#replacewith
+							case 2:
+								if (bDisableMapEnter)
+									TimeScaleCounter = 44;	// бой в море x12
+								else
+									TimeScaleCounter = 60;	// море x16
+							break;
+							case 3:
+								TimeScaleCounter = 20;		// карта x6
+							break;
+#endreplace
