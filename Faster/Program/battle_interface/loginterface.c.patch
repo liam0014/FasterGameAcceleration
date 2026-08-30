@@ -1,0 +1,66 @@
+#find
+int notificationsQty = -1;
+
+#event_handler("blieGetMsgIconRoot","BI_GetMsgIconRoot");
+#replacewith
+int notificationsQty = -1;
+
+// FasterGameAcceleration: convert game-speed-dependent UI timing back to
+// approximately real-world time. TimeScaleCounter is the game's shared
+// acceleration state: active scale = 1 + TimeScaleCounter * 0.25.
+float FGA_GetMessageTimeScale()
+{
+	float fScale = 1.0;
+
+	// Only compensate acceleration. Normal speed, slow motion and pause retain
+	// vanilla behaviour and avoid any possibility of division by zero.
+	if (TimeScaleCounter > 0)
+	{
+		fScale = 1.0 + TimeScaleCounter * 0.25;
+	}
+
+	if (fScale < 1.0) fScale = 1.0;
+	return fScale;
+}
+
+void FGA_UpdateLogTiming()
+{
+	float fScale = FGA_GetMessageTimeScale();
+
+	// ILogAndActions advances these values using scaled frame time. Dividing
+	// their rates by the active acceleration keeps ordinary log messages and
+	// picture notifications readable for roughly the same real-world duration.
+	ILogAndActions.Log.speed = 0.05 / fScale;
+	ILogAndActions.Log.color_speed = 0.02 / fScale;
+	ILogAndActions.PicInfo.color_speed = NOTIFICATIONS_SPEED / fScale;
+}
+
+#event_handler("blieGetMsgIconRoot","BI_GetMsgIconRoot");
+#endreplace
+
+#find
+	SetEventHandler(BI_EVENT_SET_VISIBLE,"SetLogInterfaceVisible",0);
+	LayerAddObject(EXECUTE,&ILogAndActions,-257);
+#replacewith
+	SetEventHandler(BI_EVENT_SET_VISIBLE,"SetLogInterfaceVisible",0);
+	SetEventHandler("frame","FGA_UpdateLogTiming",0);
+	LayerAddObject(EXECUTE,&ILogAndActions,-257);
+#endreplace
+
+#find
+			Notifications[i].lt = stf(Notifications[i].lt) - MakeFloat(GetDeltaTime()) * 0.001;
+#replacewith
+			Notifications[i].lt = stf(Notifications[i].lt) - (MakeFloat(GetDeltaTime()) / FGA_GetMessageTimeScale()) * 0.001;
+#endreplace
+
+#find
+			Notifications[i].lt = stf(Notifications[i].lt) - MakeFloat(GetDeltaTime()) * 0.001;
+#replacewith
+			Notifications[i].lt = stf(Notifications[i].lt) - (MakeFloat(GetDeltaTime()) / FGA_GetMessageTimeScale()) * 0.001;
+#endreplace
+
+#find
+			Notifications[i].lt = stf(Notifications[i].lt) - MakeFloat(GetDeltaTime()) * 0.001;
+#replacewith
+			Notifications[i].lt = stf(Notifications[i].lt) - (MakeFloat(GetDeltaTime()) / FGA_GetMessageTimeScale()) * 0.001;
+#endreplace
