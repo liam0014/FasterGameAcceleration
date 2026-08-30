@@ -44,8 +44,6 @@ void FGA_UpdateLogTiming()
 
 	// Picture notifications have their own explicit refresh path.
 	SendMessage(&ILogAndActions,"l",LOG_REFRESH_PIC);
-
-	Trace("FGA: refreshed message timing for TimeScaleCounter=" + TimeScaleCounter);
 }
 
 #event_handler("blieGetMsgIconRoot","BI_GetMsgIconRoot");
