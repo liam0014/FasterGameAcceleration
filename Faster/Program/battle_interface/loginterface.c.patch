@@ -64,6 +64,36 @@ void FGA_UpdateLogTiming()
 #endreplace
 
 #find
+void Log_SetStringToLog(string strLog)
+{
+	SendMessage(&ILogAndActions,"lls",LOG_ADD_STRING, false, strLog);
+}
+#replacewith
+void Log_SetStringToLog(string strLog)
+{
+	// Refresh immediately before the engine creates the message. Acceleration
+	// changes do not consistently pass through TimeScale_Info().
+	FGA_RefreshLogTiming();
+	SendMessage(&ILogAndActions,"lls",LOG_ADD_STRING, false, strLog);
+}
+#endreplace
+
+#find
+void Pic_Info(string strLog, int IconIndex, int iArrIdx)
+{
+	SendMessage(&ILogAndActions,"lsll", LOG_ADD_PIC, strLog, IconIndex, iArrIdx);
+}
+#replacewith
+void Pic_Info(string strLog, int IconIndex, int iArrIdx)
+{
+	// Picture notifications use a separate cached fade rate. Refresh it when a
+	// queued notification is first displayed.
+	FGA_RefreshLogTiming();
+	SendMessage(&ILogAndActions,"lsll", LOG_ADD_PIC, strLog, IconIndex, iArrIdx);
+}
+#endreplace
+
+#find
 void TimeScale_Info(string strLog)
 {
 	bool bShow = false;
