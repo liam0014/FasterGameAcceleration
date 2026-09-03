@@ -75,8 +75,8 @@ void TimeScale_Info(string strLog)
 {
 	bool bShow = false;
 	if(strLog != "") bShow = true;
-	FGA_RefreshLogTiming();
 	SendMessage(&ILogAndActions,"lsl", LOG_TIME_SPEED, strLog, bShow);
+	FGA_RefreshLogTiming();
 }
 #endreplace
 
