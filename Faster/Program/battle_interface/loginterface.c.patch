@@ -6,10 +6,11 @@ int notificationsQty = -1;
 int notificationsQty = -1;
 
 // FasterGameAcceleration: convert game-speed-dependent UI timing back to
-// approximately real-world time. TimeScaleCounter is the game's shared
+// approximately real-world time. TimeScaleCounter is the game's existing
 // acceleration state: active scale = 1 + TimeScaleCounter * 0.25.
-int FGA_LastTimeScaleCounter = 0;
-
+//
+// Keep all FGA state local. Mod-only globals and registered event handlers are
+// written into Storm saves and make those saves dependent on the mod.
 float FGA_GetMessageTimeScale()
 {
 	float fScale = 1.0;
@@ -25,37 +26,58 @@ float FGA_GetMessageTimeScale()
 	return fScale;
 }
 
-void FGA_UpdateLogTiming()
+void FGA_RefreshLogTiming()
 {
-	// The engine caches Log.speed and Log.color_speed when LOG_AND_ACTIONS_INIT
-	// is processed, so changing the attributes alone has no effect. Only refresh
-	// when the acceleration state changes.
-	if (FGA_LastTimeScaleCounter == TimeScaleCounter) return;
-	FGA_LastTimeScaleCounter = TimeScaleCounter;
-
 	float fScale = FGA_GetMessageTimeScale();
 
 	ILogAndActions.Log.speed = 0.05 / fScale;
 	ILogAndActions.Log.color_speed = 0.02 / fScale;
 	ILogAndActions.PicInfo.color_speed = NOTIFICATIONS_SPEED / fScale;
 
-	// Re-read the ordinary log settings cached inside ILogAndActions.
+	// The engine caches ordinary log settings when LOG_AND_ACTIONS_INIT is
+	// processed; picture notifications have their own explicit refresh path.
 	SendMessage(&ILogAndActions,"lll",LOG_AND_ACTIONS_INIT,sti(InterfaceStates.BattleShow.FastCommand),sti(InterfaceStates.BattleShow.LogString));
-
-	// Picture notifications have their own explicit refresh path.
 	SendMessage(&ILogAndActions,"l",LOG_REFRESH_PIC);
+}
+
+// Migration shim for saves made by the original release. It is never
+// registered by this version, but lets an old saved frame handler remove itself
+// if Storm restores it before the save is rewritten.
+void FGA_UpdateLogTiming()
+{
+	DelEventHandler("frame","FGA_UpdateLogTiming");
+	FGA_RefreshLogTiming();
 }
 
 #event_handler("blieGetMsgIconRoot","BI_GetMsgIconRoot");
 #endreplace
 
 #find
+	SetEventHandler("BI_FastCommand","BI_FastCommand",0);
 	SetEventHandler(BI_EVENT_SET_VISIBLE,"SetLogInterfaceVisible",0);
 	LayerAddObject(EXECUTE,&ILogAndActions,-257);
 #replacewith
+	SetEventHandler("BI_FastCommand","BI_FastCommand",0);
 	SetEventHandler(BI_EVENT_SET_VISIBLE,"SetLogInterfaceVisible",0);
-	SetEventHandler("frame","FGA_UpdateLogTiming",0);
+	FGA_RefreshLogTiming();
 	LayerAddObject(EXECUTE,&ILogAndActions,-257);
+#endreplace
+
+#find
+void TimeScale_Info(string strLog)
+{
+	bool bShow = false;
+	if(strLog != "") bShow = true;
+	SendMessage(&ILogAndActions,"lsl", LOG_TIME_SPEED, strLog, bShow);
+}
+#replacewith
+void TimeScale_Info(string strLog)
+{
+	bool bShow = false;
+	if(strLog != "") bShow = true;
+	FGA_RefreshLogTiming();
+	SendMessage(&ILogAndActions,"lsl", LOG_TIME_SPEED, strLog, bShow);
+}
 #endreplace
 
 #find
